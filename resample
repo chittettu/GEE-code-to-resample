@@ -1,0 +1,39 @@
+//add geometry of study area
+// Define the date range for filtering
+var startDate = '2022-11-01';
+var endDate = '2022-11-30';
+
+// Load the Landsat 8 collection
+var collection = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+  .filterBounds(geometry)
+  .filterDate(startDate, endDate);
+
+// Print the filtered collection
+print('Filtered Landsat 8 collection:', collection);
+
+var resampleImage = function(image) {
+  return image.resample('bicubic').reproject({
+    crs: image.projection(),
+    scale: 10
+  });
+};
+
+var resampledCollection = collection.map(resampleImage);
+
+// Select the first image from the resampled collection
+//var image = ee.Image(resampledCollection.first());
+
+var img= resampledCollection.mean().clip(geometry)
+print(img)
+
+
+
+var visParams = {
+  bands: ['SR_B4', 'SR_B3', 'SR_B2'],  // Select the visible bands for RGB visualization
+  min: 0,  // Minimum pixel value
+  max: 3000,  // Maximum pixel value
+  gamma: 1.07  // Gamma correction value
+};
+
+// Add the mean_img to the map
+Map.addLayer(img, visParams, 'Mean Image');
